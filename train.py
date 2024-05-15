@@ -464,16 +464,28 @@ if __name__ == "__main__":
     parser.add_argument('--detect_anomaly', action='store_true', default=False)
     parser.add_argument('--warmup', action='store_true', default=False)
     parser.add_argument('--use_wandb', action='store_true', default=False)
-    # parser.add_argument("--test_iterations", nargs="+", type=int, default=[3_000, 7_000, 30_000])
-    # parser.add_argument("--save_iterations", nargs="+", type=int, default=[3_000, 7_000, 30_000])
-    parser.add_argument("--test_iterations", nargs="+", type=int, default=[30_000])
-    parser.add_argument("--save_iterations", nargs="+", type=int, default=[30_000])
+    parser.add_argument("--test_iterations", nargs="+", type=int, default=[-1])
+    parser.add_argument("--save_iterations", nargs="+", type=int, default=[-1])
     parser.add_argument("--quiet", action="store_true")
     parser.add_argument("--checkpoint_iterations", nargs="+", type=int, default=[])
     parser.add_argument("--start_checkpoint", type=str, default = None)
     parser.add_argument("--gpu", type=str, default = '-1')
     args = parser.parse_args(sys.argv[1:])
-    args.save_iterations.append(args.iterations)
+
+    if args.test_iterations[0] == -1:
+        args.test_iterations = [i for i in range(10000, args.iterations + 1, 10000)]
+    if len(args.test_iterations) == 0 or args.test_iterations[-1] != args.iterations:
+        args.test_iterations.append(args.iterations)
+    print(args.test_iterations)
+
+    if args.save_iterations[0] == -1:
+        args.save_iterations = [i for i in range(10000, args.iterations + 1, 10000)]
+    if len(args.save_iterations) == 0 or args.save_iterations[-1] != args.iterations:
+        args.save_iterations.append(args.iterations)
+    print(args.save_iterations)
+
+    args = op.update(args)
+
 
     
     # enable logging
@@ -498,15 +510,20 @@ if __name__ == "__main__":
     except:
         logger.info(f'save code failed~')
         
-    dataset = args.source_path.split('/')[-1]
-    exp_name = args.model_path.split('/')[-2]
+    if "merged" in args.source_path:
+        dataset = args.source_path.split('/')[-2]
+        scene_name = args.model_path.split('/')[-5] 
+    else:
+        dataset = args.source_path.split('/')[-1]
+        scene_name = args.model_path.split('/')[-4]
+    time_stamp = args.model_path.split('/')[-1]
     
     if args.use_wandb:
         wandb.login()
         run = wandb.init(
             # Set the project where this run will be logged
-            project=f"Scaffold-GS-{dataset}",
-            name=exp_name,
+            project=f"{scene_name}-{dataset}",
+            name=f"Scaffold-GS-{time_stamp}",
             # Track hyperparameters and run metadata
             settings=wandb.Settings(start_method="fork"),
             config=vars(args)

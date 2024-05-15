@@ -123,11 +123,6 @@ class OptimizationParams(ParamGroup):
         self.mlp_color_lr_final = 0.00005
         self.mlp_color_lr_delay_mult = 0.01
         self.mlp_color_lr_max_steps = 30_000
-
-        self.mlp_color_lr_init = 0.008
-        self.mlp_color_lr_final = 0.00005
-        self.mlp_color_lr_delay_mult = 0.01
-        self.mlp_color_lr_max_steps = 30_000
         
         self.mlp_featurebank_lr_init = 0.01
         self.mlp_featurebank_lr_final = 0.00001
@@ -153,6 +148,16 @@ class OptimizationParams(ParamGroup):
         self.densify_grad_threshold = 0.0002
 
         super().__init__(parser, "Optimization Parameters")
+    
+    def update(self, args):
+        args.position_lr_max_steps = args.iterations
+        args.offset_lr_max_steps = args.iterations
+        args.mlp_opacity_lr_max_steps = args.iterations
+        args.mlp_cov_lr_max_steps = args.iterations
+        args.mlp_color_lr_max_steps = args.iterations
+        args.mlp_featurebank_lr_max_steps = args.iterations
+        args.appearance_lr_max_steps = args.iterations
+        return args
 
 def get_combined_args(parser : ArgumentParser):
     cmdlne_string = sys.argv[1:]
